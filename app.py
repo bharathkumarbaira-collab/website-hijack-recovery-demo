@@ -1,52 +1,47 @@
 import sqlite3
+from datetime import datetime
 
-# Step 1: Create database and table
-def init_db():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
+print("App started successfully")
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS incidents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        website TEXT,
-        attack_type TEXT,
-        detected_time TEXT,
-        recovery_status TEXT
-    )
-    """)
+# Create / connect database
+conn = sqlite3.connect("database.db")
+cursor = conn.cursor()
 
-    conn.commit()
-    conn.close()
+# Create table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS incidents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    website TEXT,
+    attack_type TEXT,
+    time TEXT,
+    status TEXT
+)
+""")
 
-# Step 2: Log a fake attack (simulation)
-def log_attack():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
+# Insert demo attack
+cursor.execute("""
+INSERT INTO incidents (website, attack_type, time, status)
+VALUES (?, ?, ?, ?)
+""", (
+    "demo-website.com",
+    "Website Defacement",
+    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "Recovered"
+))
 
-    cursor.execute("""
-    INSERT INTO incidents (website, attack_type, detected_time, recovery_status)
-    VALUES (?, ?, datetime('now'), ?)
-    """, ("demo-website.com", "Website Defacement", "Recovered"))
+conn.commit()
 
-    conn.commit()
-    conn.close()
+# Fetch logs
+cursor.execute("SELECT * FROM incidents")
+rows = cursor.fetchall()
 
-# Step 3: Display logs (proof)
-def show_logs():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
+print("---- INCIDENT LOGS ----")
+for row in rows:
+    print(row)
 
-    cursor.execute("SELECT * FROM incidents")
-    rows = cursor.fetchall()
+conn.close()
+print("App finished")
 
-    for row in rows:
-        print(row)
 
-    conn.close()
-
-# Run all steps
-init_db()
-log_attack()
-show_logs()
 
 
