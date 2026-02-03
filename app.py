@@ -1,46 +1,49 @@
+from flask import Flask, render_template_string
 import sqlite3
-from datetime import datetime
 
-print("App started successfully")
+app = Flask(__name__)
 
-# Create / connect database
-conn = sqlite3.connect("database.db")
-cursor = conn.cursor()
+@app.route("/")
+def home():
+    return "<h2>Website Hijack & Recovery Demo</h2><p>Go to /logs to view incidents.</p>"
 
-# Create table
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS incidents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    website TEXT,
-    attack_type TEXT,
-    time TEXT,
-    status TEXT
-)
-""")
+@app.route("/logs")
+def logs():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
 
-# Insert demo attack
-cursor.execute("""
-INSERT INTO incidents (website, attack_type, time, status)
-VALUES (?, ?, ?, ?)
-""", (
-    "demo-website.com",
-    "Website Defacement",
-    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    "Recovered"
-))
+    cursor.execute("SELECT * FROM incidents")
+    rows = cursor.fetchall()
+    conn.close()
 
-conn.commit()
+    html = """
+    <h2>Incident Logs</h2>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>ID</th>
+            <th>Website</th>
+            <th>Attack Type</th>
+            <th>Time</th>
+            <th>Status</th>
+        </tr>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ row[4] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    """
 
-# Fetch logs
-cursor.execute("SELECT * FROM incidents")
-rows = cursor.fetchall()
+    return render_template_string(html, rows=rows)
 
-print("---- INCIDENT LOGS ----")
-for row in rows:
-    print(row)
+if __name__ == "__main__":
+    app.run(debug=True)
 
-conn.close()
-print("App finished")
+
 
 
 
